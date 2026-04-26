@@ -112,6 +112,12 @@ function IR({icon,label,valor}:{icon:string,label:string,valor:any}){
 ══════════════════════════════════════════════════ */
 export default function App(){
   const [session,setSession]=useState<any>(null);
+  const [isMobile,setIsMobile]=useState(false);
+  useEffect(()=>{
+    const check=()=>setIsMobile(window.innerWidth<=768);
+    check();window.addEventListener("resize",check);
+    return()=>window.removeEventListener("resize",check);
+  },[]);
   const [tela,setTela]=useState("login");
   const [demandas,setDemandas]=useState<any[]>([]);
   const [loadingDB,setLoadingDB]=useState(false);
@@ -160,21 +166,27 @@ export default function App(){
     catch(e:any){showToast("Erro: "+e.message,"erro");}
   };
 
-  if(tela==="login")return <TelaLogin onLogin={handleLogin}/>;
+  if(tela==="login")return <TelaLogin onLogin={handleLogin} isMobile={isMobile}/>;
 
   const nomeUsuario=session?.user?.user_metadata?.nome||session?.user?.email||"Usuário";
   const isAdmin=session?.user?.email?.includes("danilo");
 
   return(
     <div style={{display:"flex",minHeight:"100vh"}}>
-      {sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:199}}/>}
-      <Sidebar tela={tela} setTela={(t:string)=>{setTela(t);setSidebarOpen(false);}} onLogout={handleLogout} nome={nomeUsuario} isAdmin={isAdmin} className={`sidebar${sidebarOpen?" open":""}`}/>
-      <div className="main" style={{flex:1,marginLeft:240,overflow:"auto"}}>
-        <div className="topbar" style={{display:"none",padding:"12px 16px",background:"#0a1628",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:100,borderBottom:"1px solid rgba(255,255,255,.06)"}}>
-          <button onClick={()=>setSidebarOpen(true)} style={{background:"none",border:"none",color:"#fff",fontSize:24,cursor:"pointer",padding:"4px 6px",borderRadius:8}}>☰</button>
-          <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🏛️</div>
-          <span style={{fontFamily:"Sora",fontWeight:700,color:"#fff",fontSize:15}}>Danilo Gomes</span>
-        </div>
+      {/* Overlay mobile */}
+      {isMobile&&sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:199}}/>}
+      {/* Sidebar */}
+      <div style={{width:240,background:"#0a1628",borderRight:"1px solid rgba(255,255,255,.05)",display:"flex",flexDirection:"column",minHeight:"100vh",position:"fixed",top:0,left:isMobile?(sidebarOpen?0:-240):0,zIndex:200,transition:"left .28s ease"}}>
+        <Sidebar tela={tela} setTela={(t:string)=>{setTela(t);setSidebarOpen(false);}} onLogout={handleLogout} nome={nomeUsuario} isAdmin={isAdmin}/>
+      </div>
+      <div style={{flex:1,marginLeft:isMobile?0:240,overflow:"auto",minHeight:"100vh"}}>
+        {isMobile&&(
+          <div style={{display:"flex",padding:"12px 16px",background:"#0a1628",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:100,borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+            <button onClick={()=>setSidebarOpen(true)} style={{background:"none",border:"none",color:"#fff",fontSize:24,cursor:"pointer",padding:"4px 6px",borderRadius:8}}>☰</button>
+            <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🏛️</div>
+            <span style={{fontFamily:"Sora",fontWeight:700,color:"#fff",fontSize:15}}>Danilo Gomes</span>
+          </div>
+        )}
         <div style={{padding:"28px 24px"}}>
           {tela==="dashboard"&&<Dashboard demandas={demandas} nome={nomeUsuario} setTela={setTela} setModal={setModal}/>}
           {tela==="demandas"&&<TelaDemandas demandas={demandas} setModal={setModal} onUpdate={updateDemanda} onDelete={deleteDemanda} onReload={carregarDemandas} setDemandaEdicao={setDemandaEdicao}/>}
@@ -192,23 +204,23 @@ export default function App(){
 /* LOGIN */
 const FOTO_DANILO = "https://sktvmxgflhlxbthssfrl.supabase.co/storage/v1/object/public/fotos-demandas/ChatGPT%20Image%2017%20de%20fev.%20de%202026,%2012_58_15.png";
 
-function TelaLogin({onLogin}:{onLogin:any}){
+function TelaLogin({onLogin,isMobile}:{onLogin:any,isMobile?:boolean}){
   const [email,setEmail]=useState("");const [senha,setSenha]=useState("");const [erro,setErro]=useState("");const [loading,setLoading]=useState(false);
   const go=async()=>{if(!email||!senha)return;setLoading(true);setErro("");const r=await onLogin(email,senha);if(!r.ok){setErro(r.erro);setLoading(false);}};
   return(
     <div className="login-wrap" style={{minHeight:"100vh",display:"flex",background:"#080f1a",overflow:"hidden",position:"relative"}}>
 
       {/* Header mobile — só aparece no celular */}
-      <div className="login-mobile-header" style={{display:"none",position:"absolute",top:0,left:0,right:0,zIndex:10,padding:"20px 24px",alignItems:"center",gap:12,background:"linear-gradient(to bottom,rgba(8,15,26,0.9),transparent)"}}>
+      {isMobile&&<div style={{position:"absolute",top:0,left:0,right:0,zIndex:10,padding:"20px 24px",display:"flex",alignItems:"center",gap:12,background:"linear-gradient(to bottom,rgba(8,15,26,0.9),transparent)"}}>
         <div style={{width:40,height:40,borderRadius:10,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏛️</div>
         <div>
           <div style={{fontFamily:"Sora",fontWeight:800,fontSize:15,color:"#fff"}}>Danilo Gomes</div>
           <div style={{fontSize:11,color:"rgba(255,255,255,.5)"}}>Vereador · Guarulhos/SP</div>
         </div>
-      </div>
+      </div>}
 
       {/* Painel esquerdo com foto — oculto no mobile */}
-      <div className="login-foto" style={{flex:1,position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-end"}}>
+      {!isMobile&&<div style={{flex:1,position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-end"}}>
         <img src={FOTO_DANILO} alt="Vereador Danilo Gomes" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, rgba(8,15,26,0.95) 0%, rgba(8,15,26,0.4) 40%, rgba(8,15,26,0.1) 100%)"}}/>
         <div className="fade" style={{position:"relative",zIndex:1,padding:"40px 48px",width:"100%"}}>
@@ -230,14 +242,14 @@ function TelaLogin({onLogin}:{onLogin:any}){
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Painel direito - formulário */}
-      <div className="login-form" style={{width:440,display:"flex",alignItems:"center",justifyContent:"center",padding:48,background:"#080f1a",borderLeft:"1px solid rgba(255,255,255,.05)",position:"relative",zIndex:1}}>
+      <div style={{width:isMobile?"100%":"440px",flex:isMobile?1:"none" as any,display:"flex",alignItems:"center",justifyContent:"center",padding:isMobile?"80px 24px 40px":"48px",background:"#080f1a",borderLeft:"1px solid rgba(255,255,255,.05)",position:"relative",zIndex:1}}>
         {/* Foto de fundo no mobile */}
         <div style={{position:"absolute",inset:0,overflow:"hidden"}}>
-          <img src={FOTO_DANILO} alt="" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top",opacity:.15,filter:"blur(2px)"}}/>
-          <div style={{position:"absolute",inset:0,background:"rgba(8,15,26,0.85)"}}/>
+          <img src={FOTO_DANILO} alt="" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top center",opacity:isMobile?.3:.08}}/>
+          <div style={{position:"absolute",inset:0,background:isMobile?"linear-gradient(to bottom,rgba(8,15,26,.5) 0%,rgba(8,15,26,.88) 30%)":"rgba(8,15,26,0.94)"}}/>
         </div>
         <div className="fade2" style={{width:"100%",position:"relative",zIndex:1}}>
           <div style={{marginBottom:32}}>
@@ -268,10 +280,10 @@ function TelaLogin({onLogin}:{onLogin:any}){
 }
 
 /* SIDEBAR */
-function Sidebar({tela,setTela,onLogout,nome,isAdmin,className}:any){
+function Sidebar({tela,setTela,onLogout,nome,isAdmin}:any){
   const menus=[{id:"dashboard",icon:"◉",label:"Dashboard"},{id:"demandas",icon:"≡",label:"Demandas"},...(isAdmin?[{id:"usuarios",icon:"⊕",label:"Usuários"}]:[]),{id:"relatorios",icon:"▦",label:"Relatórios"}];
   return(
-    <aside className={className} style={{width:240,background:"#0a1628",borderRight:"1px solid rgba(255,255,255,.05)",display:"flex",flexDirection:"column",minHeight:"100vh",position:"fixed",top:0,left:0,zIndex:100}}>
+    <aside style={{display:"flex",flexDirection:"column",height:"100vh",background:"#0a1628",width:"100%"}}>
       <div style={{padding:"22px 18px 16px",borderBottom:"1px solid rgba(255,255,255,.05)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:40,height:40,borderRadius:11,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🏛️</div>

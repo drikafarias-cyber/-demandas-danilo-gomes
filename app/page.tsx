@@ -189,28 +189,71 @@ export default function App(){
 }
 
 /* LOGIN */
+const FOTO_DANILO = "https://sktvmxgflhlxbthssfrl.supabase.co/storage/v1/object/public/fotos-demandas/ChatGPT%20Image%2017%20de%20fev.%20de%202026,%2012_58_15.png";
+
 function TelaLogin({onLogin}:{onLogin:any}){
   const [email,setEmail]=useState("");const [senha,setSenha]=useState("");const [erro,setErro]=useState("");const [loading,setLoading]=useState(false);
   const go=async()=>{if(!email||!senha)return;setLoading(true);setErro("");const r=await onLogin(email,senha);if(!r.ok){setErro(r.erro);setLoading(false);}};
   return(
     <div style={{minHeight:"100vh",display:"flex",background:"#080f1a",overflow:"hidden"}}>
-      <div style={{flex:1,background:"linear-gradient(145deg,#0f1f3d,#0d2a4a)",display:"flex",alignItems:"center",justifyContent:"center",padding:48,position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(59,130,246,.12) 0%,transparent 70%)",top:"5%",left:"15%",pointerEvents:"none"}}/>
-        <svg style={{position:"absolute",inset:0,opacity:.04,pointerEvents:"none"}} width="100%" height="100%"><defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="#60a5fa" strokeWidth="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>
-        <div className="fade" style={{zIndex:1,maxWidth:360,textAlign:"center"}}>
-          <div style={{width:88,height:88,borderRadius:24,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:44,margin:"0 auto 24px",boxShadow:"0 16px 48px rgba(29,78,216,.4)"}}>🏛️</div>
-          <h1 style={{fontFamily:"Sora",fontWeight:800,fontSize:28,color:"#fff",letterSpacing:"-1px",lineHeight:1.2}}>Gabinete Digital<br/><span style={{background:"linear-gradient(90deg,#60a5fa,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Danilo Gomes</span></h1>
-          <p style={{color:"rgba(255,255,255,.4)",marginTop:14,fontSize:14,lineHeight:1.7}}>Sistema oficial de gestão<br/>de demandas do mandato</p>
+      {/* Painel esquerdo com foto */}
+      <div style={{flex:1,position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-end"}}>
+        {/* Foto de fundo */}
+        <img src={FOTO_DANILO} alt="Vereador Danilo Gomes" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>
+        {/* Overlay gradiente */}
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, rgba(8,15,26,0.95) 0%, rgba(8,15,26,0.4) 40%, rgba(8,15,26,0.1) 100%)"}}/>
+        {/* Texto sobre a foto */}
+        <div className="fade" style={{position:"relative",zIndex:1,padding:"40px 48px",width:"100%"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+            <div style={{width:48,height:48,borderRadius:12,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,boxShadow:"0 8px 24px rgba(29,78,216,.4)"}}>🏛️</div>
+            <div>
+              <div style={{fontFamily:"Sora",fontWeight:800,fontSize:20,color:"#fff",letterSpacing:"-.5px"}}>Danilo Gomes</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.5)",marginTop:1}}>Vereador · Guarulhos/SP</div>
+            </div>
+          </div>
+          <h1 style={{fontFamily:"Sora",fontWeight:800,fontSize:32,color:"#fff",letterSpacing:"-1px",lineHeight:1.15,marginBottom:12}}>
+            Gabinete Digital<br/>
+            <span style={{background:"linear-gradient(90deg,#60a5fa,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>de Demandas</span>
+          </h1>
+          <p style={{color:"rgba(255,255,255,.5)",fontSize:14,lineHeight:1.7,marginBottom:24}}>
+            Sistema oficial de gestão e acompanhamento<br/>das demandas do mandato municipal
+          </p>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            {["📋 Demandas","📍 GPS","📄 Ofícios","🏛️ ZELA","📊 Relatórios"].map(t=>(
+              <span key={t} style={{padding:"5px 12px",borderRadius:20,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.12)",color:"rgba(255,255,255,.6)",fontSize:12}}>{t}</span>
+            ))}
+          </div>
         </div>
       </div>
-      <div style={{width:420,display:"flex",alignItems:"center",justifyContent:"center",padding:40,background:"#080f1a"}}>
+
+      {/* Painel direito - formulário */}
+      <div style={{width:440,display:"flex",alignItems:"center",justifyContent:"center",padding:48,background:"#080f1a",borderLeft:"1px solid rgba(255,255,255,.05)"}}>
         <div className="fade2" style={{width:"100%"}}>
-          <h2 style={{fontFamily:"Sora",fontWeight:800,fontSize:24,color:"#fff",marginBottom:6}}>Entrar no sistema</h2>
-          <p style={{color:"rgba(255,255,255,.35)",marginBottom:32,fontSize:14}}>Acesso para assessores autorizados</p>
-          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:6,textTransform:"uppercase",letterSpacing:".7px"}}>E-mail</label><input type="email" value={email} onChange={e=>{setEmail(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="seu@email.com" style={{width:"100%",padding:"13px 16px",borderRadius:11,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none"}}/></div>
-          <div style={{marginBottom:24}}><label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:6,textTransform:"uppercase",letterSpacing:".7px"}}>Senha</label><input type="password" value={senha} onChange={e=>{setSenha(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="••••••••" style={{width:"100%",padding:"13px 16px",borderRadius:11,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none"}}/></div>
-          {erro&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:10,padding:"10px 14px",color:"#fca5a5",fontSize:13,marginBottom:18}}>⚠️ {erro}</div>}
-          <button onClick={go} disabled={loading||!email||!senha} style={{width:"100%",padding:14,borderRadius:12,border:"none",background:(!email||!senha)?"rgba(255,255,255,.05)":"linear-gradient(135deg,#1d4ed8,#10b981)",color:(!email||!senha)?"rgba(255,255,255,.2)":"#fff",fontWeight:700,fontSize:15,cursor:(!email||!senha)?"not-allowed":"pointer",transition:"all .2s"}}>{loading?"⏳ Verificando...":"Acessar o sistema →"}</button>
+          <div style={{marginBottom:32}}>
+            <h2 style={{fontFamily:"Sora",fontWeight:800,fontSize:26,color:"#fff",letterSpacing:"-.5px",marginBottom:6}}>Entrar no sistema</h2>
+            <p style={{color:"rgba(255,255,255,.35)",fontSize:14}}>Acesso exclusivo para assessores autorizados</p>
+          </div>
+
+          <div style={{marginBottom:16}}>
+            <label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>E-mail</label>
+            <input type="email" value={email} onChange={e=>{setEmail(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="seu@email.com"
+              style={{width:"100%",padding:"14px 16px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none",transition:"border .2s"}}/>
+          </div>
+          <div style={{marginBottom:28}}>
+            <label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Senha</label>
+            <input type="password" value={senha} onChange={e=>{setSenha(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="••••••••"
+              style={{width:"100%",padding:"14px 16px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none"}}/>
+          </div>
+
+          {erro&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:10,padding:"12px 16px",color:"#fca5a5",fontSize:13,marginBottom:20}}>⚠️ {erro}</div>}
+
+          <button onClick={go} disabled={loading||!email||!senha} style={{width:"100%",padding:15,borderRadius:12,border:"none",background:(!email||!senha)?"rgba(255,255,255,.05)":"linear-gradient(135deg,#1d4ed8,#10b981)",color:(!email||!senha)?"rgba(255,255,255,.15)":"#fff",fontWeight:700,fontSize:15,cursor:(!email||!senha)?"not-allowed":"pointer",transition:"all .2s",boxShadow:(!email||!senha)?"none":"0 4px 24px rgba(29,78,216,.35)"}}>
+            {loading?"⏳ Verificando...":"Acessar o sistema →"}
+          </button>
+
+          <p style={{color:"rgba(255,255,255,.15)",fontSize:11,textAlign:"center",marginTop:28,lineHeight:1.6}}>
+            Não tem acesso? Solicite ao<br/>administrador do gabinete.
+          </p>
         </div>
       </div>
     </div>

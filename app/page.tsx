@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { RUAS_GRU } from "./ruas";
 
 /* ══════════════════════════════════════════════════
    SUPABASE
@@ -321,13 +322,23 @@ function CardDemanda({demanda:d,onVer,onStatus,onDelete}:any){
 
 /* MODAL NOVA DEMANDA */
 function ModalDemanda({onSalvar,onFechar}:any){
-  const [form,setForm]=useState({titulo:"",categoria:"",subcategoria:"",descricao:"",cep:"",bairro:"",endereco:"",latitude:"",longitude:"",numero_oficio:"",numero_zela:"",status_zela:""});
+  const [form,setForm]=useState({titulo:"",categoria:"",subcategoria:"",descricao:"",cep:"",bairro:"",endereco:"",numero:"",complemento:"",latitude:"",longitude:"",numero_oficio:"",numero_zela:"",status_zela:""});
   const [fotoFile,setFotoFile]=useState<File|null>(null);const [fotoPreview,setFotoPreview]=useState<string|null>(null);const [oficioFile,setOficioFile]=useState<File|null>(null);
   const [geoLoad,setGeoLoad]=useState(false);const [geoErro,setGeoErro]=useState("");const [cepLoad,setCepLoad]=useState(false);const [salvando,setSalvando]=useState(false);const [step,setStep]=useState(1);
+  const [ruaQuery,setRuaQuery]=useState("");const [ruaOpcoes,setRuaOpcoes]=useState<any[]>([]);const [ruaAberta,setRuaAberta]=useState(false);
   const fotoRef=useRef<HTMLInputElement>(null);const oficioRef=useRef<HTMLInputElement>(null);
   const set=(k:string,v:string)=>setForm((f:any)=>({...f,[k]:v}));
 
-  const buscarCEP=async(cep:string)=>{const c=cep.replace(/\D/g,"");if(c.length!==8)return;setCepLoad(true);try{const r=await fetch(`https://viacep.com.br/ws/${c}/json/`);const d=await r.json();if(!d.erro){set("bairro",d.bairro||"");set("endereco",d.logradouro||"");}}catch{}finally{setCepLoad(false);}};
+  useEffect(()=>{
+    if(ruaQuery.length<3){setRuaOpcoes([]);setRuaAberta(false);return;}
+    const q=ruaQuery.toLowerCase();
+    const filtradas=RUAS_GRU.filter(r=>r.r.toLowerCase().includes(q)).slice(0,8);
+    setRuaOpcoes(filtradas);setRuaAberta(filtradas.length>0);
+  },[ruaQuery]);
+
+  const selecionarRua=(rua:any)=>{setRuaQuery(rua.r);set("endereco",rua.r);set("bairro",rua.b);set("cep",rua.c);setRuaAberta(false);};
+
+  const buscarCEP=async(cep:string)=>{const c=cep.replace(/\D/g,"");if(c.length!==8)return;setCepLoad(true);try{const r=await fetch(`https://viacep.com.br/ws/${c}/json/`);const d=await r.json();if(!d.erro){set("bairro",d.bairro||"");set("endereco",d.logradouro||"");setRuaQuery(d.logradouro||"");}}catch{}finally{setCepLoad(false);}};
 
   const pegarGPS=()=>{if(!navigator.geolocation){setGeoErro("GPS não suportado.");return;}setGeoLoad(true);setGeoErro("");navigator.geolocation.getCurrentPosition(p=>{set("latitude",p.coords.latitude.toFixed(6));set("longitude",p.coords.longitude.toFixed(6));setGeoLoad(false);},()=>{setGeoErro("Não foi possível obter o GPS.");setGeoLoad(false);});};
 
@@ -368,16 +379,39 @@ function ModalDemanda({onSalvar,onFechar}:any){
           </>}
           {step===2&&<>
             <Campo label="CEP">
-              <div style={{display:"flex",gap:8}}><input value={form.cep} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,8);set("cep",v);if(v.length===8)buscarCEP(v);}} placeholder="00000000" maxLength={8} style={{...iBase,flex:1}}/>{cepLoad&&<span style={{padding:"9px 12px",fontSize:13,color:"#64748b"}}>⏳</span>}</div>
-              <p style={{color:"#94a3b8",fontSize:11,marginTop:4}}>CEP preenche bairro e endereço automaticamente</p>
+              <div style={{display:"flex",gap:8}}>
+                <input value={form.cep} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,8);set("cep",v);if(v.length===8)buscarCEP(v);}} placeholder="00000000" maxLength={8} style={{...iBase,flex:1}}/>
+                {cepLoad&&<span style={{padding:"9px 12px",fontSize:13,color:"#64748b"}}>⏳ Buscando...</span>}
+              </div>
+              <p style={{color:"#94a3b8",fontSize:11,marginTop:4}}>CEP preenche rua e bairro automaticamente</p>
             </Campo>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Campo label="Nome da Rua">
+              <div style={{position:"relative"}}>
+                <input value={ruaQuery} onChange={e=>{setRuaQuery(e.target.value);set("endereco",e.target.value);}} placeholder="Digite o nome da rua..." style={{...iBase,width:"100%"}}/>
+                {ruaAberta&&(
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.12)",zIndex:100,maxHeight:220,overflow:"auto",marginTop:4}}>
+                    {ruaOpcoes.map((r,i)=>(
+                      <div key={i} onClick={()=>selecionarRua(r)} style={{padding:"10px 14px",cursor:"pointer",borderBottom:"1px solid #f8fafc",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget as any).style.background="#f8fafc"} onMouseLeave={e=>(e.currentTarget as any).style.background="#fff"}>
+                        <div style={{fontSize:13,fontWeight:600,color:"#1e293b"}}>📍 {r.r}</div>
+                        <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{r.b} · CEP {r.c}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p style={{color:"#94a3b8",fontSize:11,marginTop:4}}>Digite 3 letras para ver sugestões de ruas de Guarulhos</p>
+            </Campo>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+              <Campo label="Número"><input value={form.numero} onChange={e=>set("numero",e.target.value)} placeholder="Ex: 123" style={{...iBase,width:"100%"}}/></Campo>
+              <Campo label="Complemento"><input value={form.complemento} onChange={e=>set("complemento",e.target.value)} placeholder="Apto, Bloco..." style={{...iBase,width:"100%"}}/></Campo>
               <Campo label="Bairro"><input value={form.bairro} onChange={e=>set("bairro",e.target.value)} placeholder="Bairro" style={{...iBase,width:"100%"}}/></Campo>
-              <Campo label="Endereço"><input value={form.endereco} onChange={e=>set("endereco",e.target.value)} placeholder="Rua, nº" style={{...iBase,width:"100%"}}/></Campo>
             </div>
             <Campo label="📍 GPS">
               <div style={{display:"flex",gap:8}}>
-                <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><input value={form.latitude} onChange={e=>set("latitude",e.target.value)} placeholder="Latitude" style={{...iBase,width:"100%"}}/><input value={form.longitude} onChange={e=>set("longitude",e.target.value)} placeholder="Longitude" style={{...iBase,width:"100%"}}/></div>
+                <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <input value={form.latitude} onChange={e=>set("latitude",e.target.value)} placeholder="Latitude" style={{...iBase,width:"100%"}}/>
+                  <input value={form.longitude} onChange={e=>set("longitude",e.target.value)} placeholder="Longitude" style={{...iBase,width:"100%"}}/>
+                </div>
                 <button onClick={pegarGPS} disabled={geoLoad} style={{...btnPri,height:42,padding:"0 14px",fontSize:13,whiteSpace:"nowrap",background:geoLoad?"#e2e8f0":"linear-gradient(135deg,#3b82f6,#10b981)",color:geoLoad?"#94a3b8":"#fff",flexShrink:0}}>{geoLoad?"⏳":"📍 GPS"}</button>
               </div>
               {geoErro&&<p style={{color:"#ef4444",fontSize:12,marginTop:6}}>{geoErro}</p>}

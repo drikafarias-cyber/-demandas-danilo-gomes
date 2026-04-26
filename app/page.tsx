@@ -170,8 +170,9 @@ export default function App(){
       {sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:199}}/>}
       <Sidebar tela={tela} setTela={(t:string)=>{setTela(t);setSidebarOpen(false);}} onLogout={handleLogout} nome={nomeUsuario} isAdmin={isAdmin} className={`sidebar${sidebarOpen?" open":""}`}/>
       <div className="main" style={{flex:1,marginLeft:240,overflow:"auto"}}>
-        <div className="topbar" style={{display:"none",padding:"12px 16px",background:"#0a1628",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:100}}>
-          <button onClick={()=>setSidebarOpen(true)} style={{background:"none",border:"none",color:"#fff",fontSize:22,cursor:"pointer"}}>☰</button>
+        <div className="topbar" style={{display:"none",padding:"12px 16px",background:"#0a1628",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:100,borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+          <button onClick={()=>setSidebarOpen(true)} style={{background:"none",border:"none",color:"#fff",fontSize:24,cursor:"pointer",padding:"4px 6px",borderRadius:8}}>☰</button>
+          <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🏛️</div>
           <span style={{fontFamily:"Sora",fontWeight:700,color:"#fff",fontSize:15}}>Danilo Gomes</span>
         </div>
         <div style={{padding:"28px 24px"}}>
@@ -195,14 +196,21 @@ function TelaLogin({onLogin}:{onLogin:any}){
   const [email,setEmail]=useState("");const [senha,setSenha]=useState("");const [erro,setErro]=useState("");const [loading,setLoading]=useState(false);
   const go=async()=>{if(!email||!senha)return;setLoading(true);setErro("");const r=await onLogin(email,senha);if(!r.ok){setErro(r.erro);setLoading(false);}};
   return(
-    <div style={{minHeight:"100vh",display:"flex",background:"#080f1a",overflow:"hidden"}}>
-      {/* Painel esquerdo com foto */}
-      <div style={{flex:1,position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-end"}}>
-        {/* Foto de fundo */}
+    <div className="login-wrap" style={{minHeight:"100vh",display:"flex",background:"#080f1a",overflow:"hidden",position:"relative"}}>
+
+      {/* Header mobile — só aparece no celular */}
+      <div className="login-mobile-header" style={{display:"none",position:"absolute",top:0,left:0,right:0,zIndex:10,padding:"20px 24px",alignItems:"center",gap:12,background:"linear-gradient(to bottom,rgba(8,15,26,0.9),transparent)"}}>
+        <div style={{width:40,height:40,borderRadius:10,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏛️</div>
+        <div>
+          <div style={{fontFamily:"Sora",fontWeight:800,fontSize:15,color:"#fff"}}>Danilo Gomes</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.5)"}}>Vereador · Guarulhos/SP</div>
+        </div>
+      </div>
+
+      {/* Painel esquerdo com foto — oculto no mobile */}
+      <div className="login-foto" style={{flex:1,position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-end"}}>
         <img src={FOTO_DANILO} alt="Vereador Danilo Gomes" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>
-        {/* Overlay gradiente */}
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, rgba(8,15,26,0.95) 0%, rgba(8,15,26,0.4) 40%, rgba(8,15,26,0.1) 100%)"}}/>
-        {/* Texto sobre a foto */}
         <div className="fade" style={{position:"relative",zIndex:1,padding:"40px 48px",width:"100%"}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
             <div style={{width:48,height:48,borderRadius:12,background:"linear-gradient(135deg,#1d4ed8,#10b981)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,boxShadow:"0 8px 24px rgba(29,78,216,.4)"}}>🏛️</div>
@@ -215,9 +223,7 @@ function TelaLogin({onLogin}:{onLogin:any}){
             Gabinete Digital<br/>
             <span style={{background:"linear-gradient(90deg,#60a5fa,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>de Demandas</span>
           </h1>
-          <p style={{color:"rgba(255,255,255,.5)",fontSize:14,lineHeight:1.7,marginBottom:24}}>
-            Sistema oficial de gestão e acompanhamento<br/>das demandas do mandato municipal
-          </p>
+          <p style={{color:"rgba(255,255,255,.5)",fontSize:14,lineHeight:1.7,marginBottom:24}}>Sistema oficial de gestão e acompanhamento<br/>das demandas do mandato municipal</p>
           <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
             {["📋 Demandas","📍 GPS","📄 Ofícios","🏛️ ZELA","📊 Relatórios"].map(t=>(
               <span key={t} style={{padding:"5px 12px",borderRadius:20,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.12)",color:"rgba(255,255,255,.6)",fontSize:12}}>{t}</span>
@@ -227,30 +233,31 @@ function TelaLogin({onLogin}:{onLogin:any}){
       </div>
 
       {/* Painel direito - formulário */}
-      <div style={{width:440,display:"flex",alignItems:"center",justifyContent:"center",padding:48,background:"#080f1a",borderLeft:"1px solid rgba(255,255,255,.05)"}}>
-        <div className="fade2" style={{width:"100%"}}>
+      <div className="login-form" style={{width:440,display:"flex",alignItems:"center",justifyContent:"center",padding:48,background:"#080f1a",borderLeft:"1px solid rgba(255,255,255,.05)",position:"relative",zIndex:1}}>
+        {/* Foto de fundo no mobile */}
+        <div style={{position:"absolute",inset:0,overflow:"hidden"}}>
+          <img src={FOTO_DANILO} alt="" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top",opacity:.15,filter:"blur(2px)"}}/>
+          <div style={{position:"absolute",inset:0,background:"rgba(8,15,26,0.85)"}}/>
+        </div>
+        <div className="fade2" style={{width:"100%",position:"relative",zIndex:1}}>
           <div style={{marginBottom:32}}>
             <h2 style={{fontFamily:"Sora",fontWeight:800,fontSize:26,color:"#fff",letterSpacing:"-.5px",marginBottom:6}}>Entrar no sistema</h2>
             <p style={{color:"rgba(255,255,255,.35)",fontSize:14}}>Acesso exclusivo para assessores autorizados</p>
           </div>
-
           <div style={{marginBottom:16}}>
             <label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>E-mail</label>
             <input type="email" value={email} onChange={e=>{setEmail(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="seu@email.com"
-              style={{width:"100%",padding:"14px 16px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none",transition:"border .2s"}}/>
+              style={{width:"100%",padding:"14px 16px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none"}}/>
           </div>
           <div style={{marginBottom:28}}>
             <label style={{display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.4)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Senha</label>
             <input type="password" value={senha} onChange={e=>{setSenha(e.target.value);setErro("");}} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="••••••••"
               style={{width:"100%",padding:"14px 16px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.06)",color:"#fff",fontSize:14,outline:"none"}}/>
           </div>
-
           {erro&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:10,padding:"12px 16px",color:"#fca5a5",fontSize:13,marginBottom:20}}>⚠️ {erro}</div>}
-
           <button onClick={go} disabled={loading||!email||!senha} style={{width:"100%",padding:15,borderRadius:12,border:"none",background:(!email||!senha)?"rgba(255,255,255,.05)":"linear-gradient(135deg,#1d4ed8,#10b981)",color:(!email||!senha)?"rgba(255,255,255,.15)":"#fff",fontWeight:700,fontSize:15,cursor:(!email||!senha)?"not-allowed":"pointer",transition:"all .2s",boxShadow:(!email||!senha)?"none":"0 4px 24px rgba(29,78,216,.35)"}}>
             {loading?"⏳ Verificando...":"Acessar o sistema →"}
           </button>
-
           <p style={{color:"rgba(255,255,255,.15)",fontSize:11,textAlign:"center",marginTop:28,lineHeight:1.6}}>
             Não tem acesso? Solicite ao<br/>administrador do gabinete.
           </p>

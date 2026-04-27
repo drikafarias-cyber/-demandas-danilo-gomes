@@ -368,15 +368,54 @@ function TelaDemandas({demandas,setModal,onUpdate,onDelete,onReload,setDemandaEd
 function CardDemanda({demanda:d,onVer,onStatus,onDelete}:any){
   const g=GRUPOS.find(x=>x.id===d.categoria);const st=STATUS_MAP[d.status];
   return(
-    <div style={{background:"#fff",borderRadius:14,padding:"14px 18px",border:"1px solid #f1f5f9",boxShadow:"0 1px 6px rgba(0,0,0,.04)",display:"flex",alignItems:"center",gap:14,cursor:"pointer",transition:"all .15s"}} onClick={onVer} onMouseEnter={e=>{(e.currentTarget as any).style.boxShadow="0 4px 20px rgba(0,0,0,.09)";(e.currentTarget as any).style.transform="translateY(-1px)";}} onMouseLeave={e=>{(e.currentTarget as any).style.boxShadow="0 1px 6px rgba(0,0,0,.04)";(e.currentTarget as any).style.transform="none";}}>
-      <div style={{width:44,height:44,borderRadius:12,background:(g?.cor||"#6b7280")+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{g?.icon||"📋"}</div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14,color:"#1e293b"}}>{d.titulo}</span><span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:700,background:st?.bg,color:st?.cor}}>{st?.label}</span>{d.numero_oficio&&<span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#eff6ff",color:"#1d4ed8"}}>📄 {d.numero_oficio}</span>}{d.numero_zela&&<span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#f0fdf4",color:"#15803d"}}>ZELA {d.numero_zela}</span>}</div>
-        <div style={{display:"flex",gap:12,color:"#94a3b8",fontSize:12,flexWrap:"wrap"}}><span>{g?.icon} {d.subcategoria||g?.label}</span>{d.bairro&&<span>📍 {d.bairro}</span>}<span>📅 {new Date(d.created_at).toLocaleDateString("pt-BR")}</span><span>👤 {d.criado_por}</span>{d.foto_url&&<span>📷</span>}{d.latitude&&<span>🗺️</span>}</div>
+    <div style={{background:"#fff",borderRadius:14,border:"1px solid #f1f5f9",boxShadow:"0 1px 6px rgba(0,0,0,.04)",overflow:"hidden",cursor:"pointer",transition:"box-shadow .15s"}}
+      onClick={onVer}
+      onMouseEnter={e=>{(e.currentTarget as any).style.boxShadow="0 4px 20px rgba(0,0,0,.09)";}}
+      onMouseLeave={e=>{(e.currentTarget as any).style.boxShadow="0 1px 6px rgba(0,0,0,.04)";}}>
+
+      {/* Conteúdo principal */}
+      <div style={{padding:"14px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
+        {/* Ícone categoria */}
+        <div style={{width:42,height:42,borderRadius:11,background:(g?.cor||"#6b7280")+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,marginTop:2}}>{g?.icon||"📋"}</div>
+
+        {/* Textos */}
+        <div style={{flex:1,minWidth:0}}>
+          {/* Título + badges */}
+          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5,flexWrap:"wrap"}}>
+            <span style={{fontWeight:700,fontSize:14,color:"#1e293b",wordBreak:"break-word" as any}}>{d.titulo}</span>
+            <span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:700,background:st?.bg,color:st?.cor,whiteSpace:"nowrap" as any,flexShrink:0}}>{st?.label}</span>
+            {d.numero_oficio&&<span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#eff6ff",color:"#1d4ed8",whiteSpace:"nowrap" as any}}>📄 {d.numero_oficio}</span>}
+            {d.numero_zela&&<span style={{padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#f0fdf4",color:"#15803d",whiteSpace:"nowrap" as any}}>ZELA {d.numero_zela}</span>}
+          </div>
+
+          {/* Grupo/Subcategoria */}
+          <div style={{fontSize:12,color:"#64748b",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as any}}>
+            {g?.icon} {d.subcategoria||g?.label}
+          </div>
+
+          {/* Localização e data */}
+          <div style={{display:"flex",flexWrap:"wrap" as any,gap:"4px 12px",color:"#94a3b8",fontSize:12}}>
+            {d.bairro&&<span style={{overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>📍 {d.bairro}{d.endereco?` · ${d.endereco}`:""}</span>}
+            <span style={{whiteSpace:"nowrap" as any}}>📅 {new Date(d.created_at).toLocaleDateString("pt-BR")}</span>
+            <span style={{overflow:"hidden",textOverflow:"ellipsis",maxWidth:"180px" as any}}>👤 {d.criado_por}</span>
+            {d.foto_url&&<span>📷 Foto</span>}
+            {d.latitude&&<span>🗺️ GPS</span>}
+          </div>
+        </div>
       </div>
-      <div style={{display:"flex",gap:6,flexShrink:0}} onClick={e=>e.stopPropagation()}>
-        {Object.entries(STATUS_MAP).filter(([k])=>k!==d.status).slice(0,2).map(([k,v])=><button key={k} onClick={()=>onStatus(k)} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${v.cor}40`,background:v.bg,color:v.cor,fontSize:11,fontWeight:700,cursor:"pointer"}}>{v.label}</button>)}
-        <button onClick={onDelete} style={{padding:"5px 9px",borderRadius:7,border:"1px solid #fecaca",background:"#fff5f5",color:"#ef4444",fontSize:12,cursor:"pointer"}}>🗑</button>
+
+      {/* Área de Ações — separada do conteúdo */}
+      <div style={{borderTop:"1px solid #f8fafc",padding:"10px 16px",display:"flex",gap:8,flexWrap:"wrap" as any,alignItems:"center",background:"#fafafa"}}
+        onClick={e=>e.stopPropagation()}>
+        <span style={{fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase" as any,letterSpacing:".5px",marginRight:4}}>Ações:</span>
+        {Object.entries(STATUS_MAP).filter(([k])=>k!==d.status).map(([k,v])=>(
+          <button key={k} onClick={()=>onStatus(k)} style={{padding:"6px 12px",borderRadius:8,border:`1px solid ${v.cor}40`,background:v.bg,color:v.cor,fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap" as any,flex:"0 0 auto"}}>
+            {v.label}
+          </button>
+        ))}
+        <button onClick={onDelete} style={{padding:"6px 10px",borderRadius:8,border:"1px solid #fecaca",background:"#fff5f5",color:"#ef4444",fontSize:12,fontWeight:700,cursor:"pointer",marginLeft:"auto",flex:"0 0 auto"}}>
+          🗑 Excluir
+        </button>
       </div>
     </div>
   );

@@ -14,8 +14,29 @@ const api = {
   async post(t:string,b:any){const r=await fetch(`${SUPABASE_URL}/rest/v1/${t}`,{method:"POST",headers:H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();},
   async patch(t:string,id:any,b:any){const r=await fetch(`${SUPABASE_URL}/rest/v1/${t}?id=eq.${id}`,{method:"PATCH",headers:H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();},
   async delete(t:string,id:any){const r=await fetch(`${SUPABASE_URL}/rest/v1/${t}?id=eq.${id}`,{method:"DELETE",headers:H});if(!r.ok)throw new Error(await r.text());},
-  async uploadFoto(file:File){const ext=file.name.split(".").pop();const nome=`${Date.now()}.${ext}`;const r=await fetch(`${SUPABASE_URL}/storage/v1/object/fotos-demandas/${nome}`,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":file.type},body:file});if(!r.ok)return null;return`${SUPABASE_URL}/storage/v1/object/public/fotos-demandas/${nome}`;},
-  async uploadOficio(file:File){const nome=`oficios/${Date.now()}_${file.name.replace(/\s/g,"_")}`;const r=await fetch(`${SUPABASE_URL}/storage/v1/object/fotos-demandas/${nome}`,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":file.type},body:file});if(!r.ok)return null;return`${SUPABASE_URL}/storage/v1/object/public/fotos-demandas/${nome}`;}
+  async uploadFoto(file:File, token?:string){
+    const ext=file.name.split(".").pop();
+    const nome=`${Date.now()}.${ext}`;
+    const authToken = token || SUPABASE_KEY;
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/fotos-demandas/${nome}`,{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${authToken}`,"Content-Type":file.type,"x-upsert":"true"},
+      body:file
+    });
+    if(!r.ok){console.error("Upload foto erro:",await r.text());return null;}
+    return`${SUPABASE_URL}/storage/v1/object/public/fotos-demandas/${nome}`;
+  },
+  async uploadOficio(file:File, token?:string){
+    const nome=`oficios/${Date.now()}_${file.name.replace(/\s/g,"_")}`;
+    const authToken = token || SUPABASE_KEY;
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/fotos-demandas/${nome}`,{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${authToken}`,"Content-Type":file.type,"x-upsert":"true"},
+      body:file
+    });
+    if(!r.ok){console.error("Upload oficio erro:",await r.text());return null;}
+    return`${SUPABASE_URL}/storage/v1/object/public/fotos-demandas/${nome}`;
+  }
 };
 
 const auth = {
@@ -148,8 +169,9 @@ export default function App(){
   const addDemanda=async(form:any,fotoFile:File|null,oficioFile:File|null)=>{
     try{
       let foto_url=null,oficio_url=null;
-      if(fotoFile)foto_url=await api.uploadFoto(fotoFile);
-      if(oficioFile)oficio_url=await api.uploadOficio(oficioFile);
+      const userToken = session?.token;
+      if(fotoFile)foto_url=await api.uploadFoto(fotoFile, userToken);
+      if(oficioFile)oficio_url=await api.uploadOficio(oficioFile, userToken);
       const nova={titulo:form.titulo,categoria:form.categoria,subcategoria:form.subcategoria||null,descricao:form.descricao||null,cep:form.cep||null,bairro:form.bairro||null,endereco:form.endereco||null,latitude:form.latitude||null,longitude:form.longitude||null,foto_url,status:"pendente",numero_oficio:form.numero_oficio||null,oficio_url,numero_zela:form.numero_zela||null,status_zela:form.status_zela||null,criado_por:session.user.user_metadata?.nome||session.user.email,criado_por_id:session.user.id};
       const [criada]=await api.post("demandas",nova);
       setDemandas((p:any)=>[criada,...p]);setModal(null);showToast("Demanda cadastrada! ✅");

@@ -744,10 +744,25 @@ function TelaRelatorios({demandas,showToast}:any){
       </div>
       <div className="fade3" style={{background:"#fff",borderRadius:14,padding:"14px 20px",marginBottom:18,border:"1px solid #f1f5f9",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
         <span style={{fontSize:13,fontWeight:700,color:"#374151"}}>Filtrar:</span>
-        <input placeholder="Bairro..." value={filtro.bairro} onChange={e=>setFiltro({...filtro,bairro:e.target.value})} style={{...iBase,width:160}}/>
-        <select value={filtro.grupo} onChange={e=>setFiltro({...filtro,grupo:e.target.value})} style={iBase}><option value="">Todos os Grupos</option>{GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}</select>
-        <select value={filtro.status} onChange={e=>setFiltro({...filtro,status:e.target.value})} style={iBase}><option value="">Todos Status</option>{Object.entries(STATUS_MAP).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select>
-        <span style={{color:"#94a3b8",fontSize:12}}>{filtradas.length} demanda(s)</span>
+        <input placeholder="🔍 Bairro..." value={filtro.bairro} onChange={e=>setFiltro({...filtro,bairro:e.target.value})} style={{...iBase,width:150}}/>
+        <select value={filtro.grupo} onChange={e=>setFiltro({...filtro,grupo:e.target.value,subcategoria:""})} style={iBase}>
+          <option value="">Todos os Grupos</option>
+          {GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}
+        </select>
+        {filtro.grupo&&subsDisponiveis.length>1&&(
+          <select value={filtro.subcategoria} onChange={e=>setFiltro({...filtro,subcategoria:e.target.value})} style={iBase}>
+            <option value="">Todas Subcategorias</option>
+            {subsDisponiveis.map((s:string)=><option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
+        <select value={filtro.status} onChange={e=>setFiltro({...filtro,status:e.target.value})} style={iBase}>
+          <option value="">Todos Status</option>
+          {Object.entries(STATUS_MAP).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+        </select>
+        {(filtro.grupo||filtro.subcategoria||filtro.status||filtro.bairro)&&(
+          <button onClick={()=>setFiltro({grupo:"",subcategoria:"",status:"",bairro:""})} style={{...iBase,cursor:"pointer",color:"#ef4444",background:"#fff5f5",border:"1px solid #fecaca"}}>✕ Limpar</button>
+        )}
+        <span style={{color:"#94a3b8",fontSize:12,marginLeft:4}}>{filtradas.length} demanda(s)</span>
       </div>
       <div className="fade4" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
         <div style={{background:"#fff",borderRadius:16,padding:22,border:"1px solid #f1f5f9"}}>

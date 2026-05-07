@@ -703,7 +703,7 @@ function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio,podeEditar,isA
 /* USUÁRIOS */
 function TelaUsuarios({showToast}:any){
   const [form,setForm]=useState({nome:"",email:"",senha:"",perfil:"assessor"});const [salvando,setSalvando]=useState(false);
-  const criar=async()=>{if(!form.nome||!form.email||!form.senha)return;setSalvando(true);try{await auth.signUp(form.email,form.senha,form.nome,form.perfil||'assessor');showToast(`Usuário ${form.nome} criado! ✅`);setForm({nome:"",email:"",senha:""});}catch(e:any){showToast("Erro: "+e.message,"erro");}finally{setSalvando(false);}};
+  const criar=async()=>{if(!form.nome||!form.email||!form.senha)return;setSalvando(true);try{await auth.signUp(form.email,form.senha,form.nome,form.perfil||'assessor');showToast(`Usuário ${form.nome} criado! ✅`);setForm({nome:"",email:"",senha:"",perfil:"assessor"});}catch(e:any){showToast("Erro: "+e.message,"erro");}finally{setSalvando(false);}};
   return(
     <div>
       <div className="fade" style={{marginBottom:24}}><h1 style={{fontFamily:"Sora",fontWeight:800,fontSize:26,color:"#0f172a"}}>Usuários</h1></div>

@@ -727,7 +727,7 @@ function TelaUsuarios({showToast}:any){
 
 /* RELATÓRIOS */
 function TelaRelatorios({demandas,showToast}:any){
-  const [filtro,setFiltro]=useState({grupo:"",status:"",bairro:""});
+  const [filtro,setFiltro]=useState({grupo:"",subcategoria:"",status:"",bairro:""});
   const total=demandas.length;
   const filtradas=demandas.filter((d:any)=>(!filtro.grupo||d.categoria===filtro.grupo)&&(!filtro.status||d.status===filtro.status)&&(!filtro.bairro||(d.bairro||"").toLowerCase().includes(filtro.bairro.toLowerCase())));
   const porBairro=Object.entries(demandas.reduce((a:any,d:any)=>{const b=d.bairro||"Sem bairro";a[b]=(a[b]||0)+1;return a;},{})).sort((a:any,b:any)=>b[1]-a[1]) as [string,number][];

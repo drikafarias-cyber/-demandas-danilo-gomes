@@ -41,7 +41,7 @@ const api = {
 
 const auth = {
   async signIn(email:string,senha:string){const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},body:JSON.stringify({email,password:senha})});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||"Credenciais inválidas");return d;},
-  async signUp(email:string,senha:string,nome:string){const r=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},body:JSON.stringify({email,password:senha,data:{nome}})});const d=await r.json();if(!r.ok)throw new Error(d.msg||"Erro ao criar usuário");return d;},
+  async signUp(email:string,senha:string,nome:string,perfil:string='assessor'){const r=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},body:JSON.stringify({email,password:senha,data:{nome,perfil}})});const d=await r.json();if(!r.ok)throw new Error(d.msg||"Erro ao criar usuário");return d;},
   async signOut(token:string){await fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${token}`}});}
 };
 
@@ -77,8 +77,21 @@ const STATUS_MAP:Record<string,{label:string,cor:string,bg:string}> = {
 ══════════════════════════════════════════════════ */
 function exportarPDF(demandas:any[]){
   const data=new Date().toLocaleDateString("pt-BR");
-  const rows=demandas.map(d=>{const g=GRUPOS.find(x=>x.id===d.categoria);const st=STATUS_MAP[d.status];return`<tr><td>${g?.icon} ${d.subcategoria||g?.label}</td><td><b>${d.titulo}</b></td><td>${d.bairro||"—"}</td><td><span style="background:${st?.bg};color:${st?.cor};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${st?.label}</span></td><td>${d.numero_oficio||"—"}</td><td>${d.numero_zela||"—"}</td><td>${d.status_zela||"—"}</td><td>${new Date(d.created_at).toLocaleDateString("pt-BR")}</td></tr>`;}).join("");
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Demandas</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:28px;font-size:12px;color:#1e293b}.h{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:3px solid #0f172a;margin-bottom:20px}.logo{width:48px;height:48px;background:linear-gradient(135deg,#1d4ed8,#10b981);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}h1{font-size:18px;font-weight:800}p{color:#64748b;font-size:12px}.meta{display:flex;gap:12px;margin-bottom:18px}.mc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px}.mc .n{font-size:20px;font-weight:800}.mc .l{font-size:10px;color:#94a3b8;text-transform:uppercase}table{width:100%;border-collapse:collapse}th{background:#0f172a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase}td{padding:8px 10px;border-bottom:1px solid #f1f5f9}tr:nth-child(even)td{background:#f8fafc}</style></head><body><div class="h"><div class="logo">🏛️</div><div><h1>Vereador Danilo Gomes</h1><p>Relatório de Demandas — ${data}</p></div></div><div class="meta"><div class="mc"><div class="n">${demandas.length}</div><div class="l">Total</div></div><div class="mc"><div class="n" style="color:#d97706">${demandas.filter((d:any)=>d.status==="pendente").length}</div><div class="l">Pendentes</div></div><div class="mc"><div class="n" style="color:#2563eb">${demandas.filter((d:any)=>d.status==="andamento").length}</div><div class="l">Andamento</div></div><div class="mc"><div class="n" style="color:#16a34a">${demandas.filter((d:any)=>d.status==="concluido").length}</div><div class="l">Concluídos</div></div></div><table><thead><tr><th>Categoria</th><th>Título</th><th>Bairro</th><th>Status</th><th>Ofício</th><th>ZELA</th><th>Status ZELA</th><th>Data</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const rows=demandas.map(d=>{
+    const g=GRUPOS.find(x=>x.id===d.categoria);const st=STATUS_MAP[d.status];
+    const endCompleto=[d.endereco,d.numero,d.complemento].filter(Boolean).join(", ");
+    const localCompleto=[endCompleto,d.bairro,d.cep].filter(Boolean).join(" — ");
+    return`<tr>
+      <td><b>${d.titulo}</b><br/><span style="font-size:10px;color:#64748b">${d.subcategoria||g?.label||d.categoria}</span></td>
+      <td>${localCompleto||"—"}</td>
+      <td><span style="background:${st?.bg};color:${st?.cor};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${st?.label}</span></td>
+      <td>${d.criado_por||"—"}</td>
+      <td>${d.numero_oficio||"—"}</td>
+      <td>${d.numero_zela||"—"}</td>
+      <td>${d.status_zela||"—"}</td>
+      <td>${new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
+    </tr>`;}).join("");
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Demandas</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:28px;font-size:12px;color:#1e293b}.h{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:3px solid #0f172a;margin-bottom:20px}.logo{width:48px;height:48px;background:linear-gradient(135deg,#1d4ed8,#10b981);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}h1{font-size:18px;font-weight:800}p{color:#64748b;font-size:12px}.meta{display:flex;gap:12px;margin-bottom:18px}.mc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px}.mc .n{font-size:20px;font-weight:800}.mc .l{font-size:10px;color:#94a3b8;text-transform:uppercase}table{width:100%;border-collapse:collapse}th{background:#0f172a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase}td{padding:8px 10px;border-bottom:1px solid #f1f5f9}tr:nth-child(even)td{background:#f8fafc}</style></head><body><div class="h"><div class="logo">🏛️</div><div><h1>Vereador Danilo Gomes</h1><p>Relatório de Demandas — ${data}</p></div></div><div class="meta"><div class="mc"><div class="n">${demandas.length}</div><div class="l">Total</div></div><div class="mc"><div class="n" style="color:#d97706">${demandas.filter((d:any)=>d.status==="pendente").length}</div><div class="l">Pendentes</div></div><div class="mc"><div class="n" style="color:#2563eb">${demandas.filter((d:any)=>d.status==="andamento").length}</div><div class="l">Andamento</div></div><div class="mc"><div class="n" style="color:#16a34a">${demandas.filter((d:any)=>d.status==="concluido").length}</div><div class="l">Concluídos</div></div></div><table><thead><tr><th>Título / Categoria</th><th>Endereço Completo</th><th>Status</th><th>Assessor</th><th>Ofício</th><th>ZELA</th><th>Status ZELA</th><th>Data</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
   const w=window.open("","_blank");if(w){w.document.write(html);w.document.close();}
 }
 
@@ -191,7 +204,9 @@ export default function App(){
   if(tela==="login")return <TelaLogin onLogin={handleLogin} isMobile={isMobile}/>;
 
   const nomeUsuario=session?.user?.user_metadata?.nome||session?.user?.email||"Usuário";
-  const isAdmin=session?.user?.email?.includes("danilo");
+  const userPerfil = session?.user?.user_metadata?.perfil || (session?.user?.email?.includes("danilo") ? "admin" : "assessor");
+  const isAdmin = userPerfil === "admin";
+  const userId = session?.user?.id;
 
   return(
     <div style={{display:"flex",minHeight:"100vh"}}>
@@ -211,13 +226,18 @@ export default function App(){
         )}
         <div style={{padding:"28px 24px"}}>
           {tela==="dashboard"&&<Dashboard demandas={demandas} nome={nomeUsuario} setTela={setTela} setModal={setModal}/>}
-          {tela==="demandas"&&<TelaDemandas demandas={demandas} setModal={setModal} onUpdate={updateDemanda} onDelete={deleteDemanda} onReload={carregarDemandas} setDemandaEdicao={setDemandaEdicao}/>}
+          {tela==="demandas"&&<TelaDemandas demandas={demandas} setModal={setModal} onUpdate={updateDemanda} onDelete={deleteDemanda} onReload={carregarDemandas} setDemandaEdicao={setDemandaEdicao} isAdmin={isAdmin} userId={userId}/>}
           {tela==="usuarios"&&isAdmin&&<TelaUsuarios showToast={showToast}/>}
           {tela==="relatorios"&&<TelaRelatorios demandas={demandas} showToast={showToast}/>}
         </div>
       </div>
       {modal==="nova-demanda"&&<ModalDemanda onSalvar={addDemanda} onFechar={()=>setModal(null)}/>}
-      {demandaEdicao&&<ModalDetalhe demanda={demandaEdicao} onFechar={()=>setDemandaEdicao(null)} onStatus={(s:string)=>updateDemanda(demandaEdicao.id,{status:s})} onSalvarOficio={(id:any,dados:any)=>{updateDemanda(id,dados);setDemandaEdicao((p:any)=>({...p,...dados}));}}/>}
+      {demandaEdicao&&<ModalDetalhe demanda={demandaEdicao} onFechar={()=>setDemandaEdicao(null)}
+  onStatus={(s:string)=>updateDemanda(demandaEdicao.id,{status:s})}
+  onSalvarOficio={(id:any,dados:any)=>{updateDemanda(id,dados);setDemandaEdicao((p:any)=>({...p,...dados}));}}
+  podeEditar={isAdmin||(demandaEdicao?.criado_por_id===userId)}
+  isAdmin={isAdmin}
+/>}
       {toast&&<div className="pop" style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:toast.tipo==="erro"?"#7f1d1d":"#0f172a",borderLeft:`4px solid ${toast.tipo==="erro"?"#ef4444":toast.tipo==="info"?"#3b82f6":"#10b981"}`,color:"#fff",padding:"12px 20px",borderRadius:12,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,.3)",fontSize:14,fontWeight:500,whiteSpace:"nowrap"}}>{toast.msg}</div>}
     </div>
   );
@@ -316,7 +336,11 @@ function Sidebar({tela,setTela,onLogout,nome,isAdmin}:any){
         {menus.map((m:any)=>{const a=tela===m.id;return <button key={m.id} onClick={()=>setTela(m.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:9,border:"none",marginBottom:2,background:a?"rgba(59,130,246,.12)":"transparent",color:a?"#60a5fa":"rgba(255,255,255,.4)",fontSize:14,fontWeight:a?600:400,textAlign:"left",cursor:"pointer",transition:"all .15s",borderLeft:`3px solid ${a?"#3b82f6":"transparent"}`}}><span style={{fontSize:16,width:20,textAlign:"center"}}>{m.icon}</span>{m.label}</button>;})}
       </nav>
       <div style={{padding:"12px 10px 16px",borderTop:"1px solid rgba(255,255,255,.05)"}}>
-        <div style={{padding:"10px 12px",borderRadius:10,background:"rgba(255,255,255,.03)",marginBottom:8}}><div style={{color:"#e2e8f0",fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nome}</div><div style={{color:"rgba(255,255,255,.3)",fontSize:11,marginTop:2}}>{isAdmin?"🔑 Administrador":"👤 Assessor"}</div></div>
+        <div style={{padding:"10px 12px",borderRadius:10,background:"rgba(255,255,255,.03)",marginBottom:8}}><div style={{color:"#e2e8f0",fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nome}</div><div style={{fontSize:11,marginTop:2,display:"flex",alignItems:"center",gap:4}}>
+              <span style={{padding:"1px 7px",borderRadius:20,background:isAdmin?"rgba(251,191,36,.15)":"rgba(99,102,241,.15)",color:isAdmin?"#fbbf24":"#818cf8",fontWeight:600,fontSize:10}}>
+                {isAdmin?"🔑 Admin":"👤 Assessor"}
+              </span>
+            </div></div>
         <button onClick={onLogout} style={{width:"100%",padding:8,borderRadius:9,border:"1px solid rgba(239,68,68,.15)",background:"rgba(239,68,68,.05)",color:"rgba(239,68,68,.65)",fontSize:13,cursor:"pointer"}}>↩ Sair</button>
       </div>
     </aside>
@@ -358,9 +382,22 @@ function Dashboard({demandas,nome,setTela,setModal}:any){
 }
 
 /* TELA DEMANDAS */
-function TelaDemandas({demandas,setModal,onUpdate,onDelete,onReload,setDemandaEdicao}:any){
-  const [filtro,setFiltro]=useState({busca:"",grupo:"",status:""});
-  const filtradas=demandas.filter((d:any)=>{const q=filtro.busca.toLowerCase();return(!q||d.titulo?.toLowerCase().includes(q)||d.bairro?.toLowerCase().includes(q))&&(!filtro.grupo||d.categoria===filtro.grupo)&&(!filtro.status||d.status===filtro.status);});
+function TelaDemandas({demandas,setModal,onUpdate,onDelete,onReload,setDemandaEdicao,isAdmin,userId}:any){
+  const [filtro,setFiltro]=useState({busca:"",grupo:"",subcategoria:"",status:""});
+  
+  // Subcategorias disponíveis para o grupo selecionado
+  const grupoSel = filtro.grupo ? GRUPOS.find(g=>g.id===filtro.grupo) : null;
+  const subsDisponiveis = grupoSel?.subs || [];
+
+  const filtradas=demandas.filter((d:any)=>{
+    const q=filtro.busca.toLowerCase();
+    return(
+      (!q||d.titulo?.toLowerCase().includes(q)||d.bairro?.toLowerCase().includes(q)||d.subcategoria?.toLowerCase().includes(q))&&
+      (!filtro.grupo||d.categoria===filtro.grupo)&&
+      (!filtro.subcategoria||d.subcategoria===filtro.subcategoria)&&
+      (!filtro.status||d.status===filtro.status)
+    );
+  });
   return(
     <div>
       <div className="fade" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:12}}>
@@ -373,21 +410,43 @@ function TelaDemandas({demandas,setModal,onUpdate,onDelete,onReload,setDemandaEd
         </div>
       </div>
       <div className="fade2" style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-        <input placeholder="🔍 Buscar..." value={filtro.busca} onChange={e=>setFiltro({...filtro,busca:e.target.value})} style={{flex:1,minWidth:180,...iBase}}/>
-        <select value={filtro.grupo} onChange={e=>setFiltro({...filtro,grupo:e.target.value})} style={iBase}><option value="">Todos os Grupos</option>{GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}</select>
-        <select value={filtro.status} onChange={e=>setFiltro({...filtro,status:e.target.value})} style={iBase}><option value="">Todos Status</option>{Object.entries(STATUS_MAP).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select>
-        {(filtro.busca||filtro.grupo||filtro.status)&&<button onClick={()=>setFiltro({busca:"",grupo:"",status:""})} style={{...iBase,cursor:"pointer",color:"#ef4444",background:"#fff5f5",border:"1px solid #fecaca"}}>✕</button>}
+        <input placeholder="🔍 Buscar título, bairro..." value={filtro.busca} onChange={e=>setFiltro({...filtro,busca:e.target.value})} style={{flex:1,minWidth:180,...iBase}}/>
+        <select value={filtro.grupo} onChange={e=>setFiltro({...filtro,grupo:e.target.value,subcategoria:""})} style={iBase}>
+          <option value="">Todos os Grupos</option>
+          {GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}
+        </select>
+        {filtro.grupo&&subsDisponiveis.length>1&&(
+          <select value={filtro.subcategoria} onChange={e=>setFiltro({...filtro,subcategoria:e.target.value})} style={iBase}>
+            <option value="">Todas Subcategorias</option>
+            {subsDisponiveis.map((s:string)=><option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
+        <select value={filtro.status} onChange={e=>setFiltro({...filtro,status:e.target.value})} style={iBase}>
+          <option value="">Todos Status</option>
+          {Object.entries(STATUS_MAP).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+        </select>
+        {(filtro.busca||filtro.grupo||filtro.subcategoria||filtro.status)&&(
+          <button onClick={()=>setFiltro({busca:"",grupo:"",subcategoria:"",status:""})} style={{...iBase,cursor:"pointer",color:"#ef4444",background:"#fff5f5",border:"1px solid #fecaca"}}>✕ Limpar</button>
+        )}
       </div>
       <div className="fade3" style={{display:"flex",flexDirection:"column",gap:10}}>
         {filtradas.length===0?<div style={{textAlign:"center",padding:"60px 0",background:"#fff",borderRadius:16,border:"1px solid #f1f5f9"}}><div style={{fontSize:52,marginBottom:12}}>📭</div><h3 style={{fontFamily:"Sora",fontWeight:700,color:"#0f172a"}}>Nenhuma demanda encontrada</h3></div>
-        :filtradas.map((d:any)=><CardDemanda key={d.id} demanda={d} onVer={()=>setDemandaEdicao(d)} onStatus={(s:string)=>onUpdate(d.id,{status:s})} onDelete={()=>{if(window.confirm("Remover?"))onDelete(d.id);}}/>)}
+        :filtradas.map((d:any)=>{
+    const podeEditar = isAdmin || d.criado_por_id === userId;
+    const podeExcluir = isAdmin;
+    return <CardDemanda key={d.id} demanda={d} onVer={()=>setDemandaEdicao(d)}
+      onStatus={podeEditar?(s:string)=>onUpdate(d.id,{status:s}):undefined}
+      onDelete={podeExcluir?()=>{if(window.confirm("Remover esta demanda?"))onDelete(d.id);}:undefined}
+      podeEditar={podeEditar} podeExcluir={podeExcluir}/>;
+  })
+}
       </div>
     </div>
   );
 }
 
 /* CARD */
-function CardDemanda({demanda:d,onVer,onStatus,onDelete}:any){
+function CardDemanda({demanda:d,onVer,onStatus,onDelete,podeEditar,podeExcluir}:any){
   const g=GRUPOS.find(x=>x.id===d.categoria);const st=STATUS_MAP[d.status];
   return(
     <div style={{background:"#fff",borderRadius:14,border:"1px solid #f1f5f9",boxShadow:"0 1px 6px rgba(0,0,0,.04)",overflow:"hidden",cursor:"pointer",transition:"box-shadow .15s"}}
@@ -429,15 +488,22 @@ function CardDemanda({demanda:d,onVer,onStatus,onDelete}:any){
       {/* Área de Ações — separada do conteúdo */}
       <div style={{borderTop:"1px solid #f8fafc",padding:"10px 16px",display:"flex",gap:8,flexWrap:"wrap" as any,alignItems:"center",background:"#fafafa"}}
         onClick={e=>e.stopPropagation()}>
-        <span style={{fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase" as any,letterSpacing:".5px",marginRight:4}}>Ações:</span>
-        {Object.entries(STATUS_MAP).filter(([k])=>k!==d.status).map(([k,v])=>(
+        {(podeEditar||podeExcluir)&&(
+          <span style={{fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase" as any,letterSpacing:".5px",marginRight:4}}>Ações:</span>
+        )}
+        {podeEditar&&Object.entries(STATUS_MAP).filter(([k])=>k!==d.status).map(([k,v])=>(
           <button key={k} onClick={()=>onStatus(k)} style={{padding:"6px 12px",borderRadius:8,border:`1px solid ${v.cor}40`,background:v.bg,color:v.cor,fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap" as any,flex:"0 0 auto"}}>
             {v.label}
           </button>
         ))}
-        <button onClick={onDelete} style={{padding:"6px 10px",borderRadius:8,border:"1px solid #fecaca",background:"#fff5f5",color:"#ef4444",fontSize:12,fontWeight:700,cursor:"pointer",marginLeft:"auto",flex:"0 0 auto"}}>
-          🗑 Excluir
-        </button>
+        {!podeEditar&&!podeExcluir&&(
+          <span style={{fontSize:12,color:"#94a3b8",fontStyle:"italic" as any}}>👁 Somente visualização</span>
+        )}
+        {podeExcluir&&(
+          <button onClick={onDelete} style={{padding:"6px 10px",borderRadius:8,border:"1px solid #fecaca",background:"#fff5f5",color:"#ef4444",fontSize:12,fontWeight:700,cursor:"pointer",marginLeft:"auto",flex:"0 0 auto"}}>
+            🗑 Excluir
+          </button>
+        )}
       </div>
     </div>
   );
@@ -570,7 +636,7 @@ function ModalDemanda({onSalvar,onFechar}:any){
 }
 
 /* MODAL DETALHE */
-function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio}:any){
+function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio,podeEditar,isAdmin}:any){
   const g=GRUPOS.find(x=>x.id===d.categoria);const st=STATUS_MAP[d.status];
   const [editOficio,setEditOficio]=useState(false);const [oficio,setOficio]=useState({numero_oficio:d.numero_oficio||"",numero_zela:d.numero_zela||"",status_zela:d.status_zela||""});const [oficioFile,setOficioFile]=useState<File|null>(null);const [salvando,setSalvando]=useState(false);const oficioRef=useRef<HTMLInputElement>(null);const [tab,setTab]=useState("info");
   const salvarOficio=async()=>{setSalvando(true);let oficio_url=d.oficio_url;if(oficioFile)oficio_url=await api.uploadOficio(oficioFile);onSalvarOficio(d.id,{...oficio,oficio_url});setEditOficio(false);setSalvando(false);};
@@ -599,8 +665,21 @@ function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio}:any){
             <IR icon="👤" label="Cadastrado por" valor={d.criado_por}/>
             <IR icon="📅" label="Data" valor={new Date(d.created_at).toLocaleString("pt-BR")}/>
             <div style={{marginTop:18,padding:14,background:"#f8fafc",borderRadius:12}}>
-              <p style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:10,textTransform:"uppercase",letterSpacing:".5px"}}>Alterar Status</p>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{Object.entries(STATUS_MAP).map(([k,v])=><button key={k} onClick={()=>onStatus(k)} style={{padding:"7px 14px",borderRadius:8,cursor:"pointer",border:`2px solid ${d.status===k?v.cor:"#e2e8f0"}`,background:d.status===k?v.bg:"#fff",color:d.status===k?v.cor:"#64748b",fontSize:12,fontWeight:700}}>{v.label}</button>)}</div>
+              <p style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:10,textTransform:"uppercase",letterSpacing:".5px"}}>
+                {podeEditar?"Alterar Status":"Status Atual"}
+              </p>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {Object.entries(STATUS_MAP).map(([k,v])=>(
+                  <button key={k} onClick={()=>podeEditar&&onStatus(k)}
+                    style={{padding:"7px 14px",borderRadius:8,cursor:podeEditar?"pointer":"default",
+                    border:`2px solid ${d.status===k?v.cor:"#e2e8f0"}`,
+                    background:d.status===k?v.bg:"#fff",color:d.status===k?v.cor:"#64748b",
+                    fontSize:12,fontWeight:700,opacity:podeEditar||d.status===k?1:.5}}>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {!podeEditar&&<p style={{fontSize:11,color:"#94a3b8",marginTop:8,fontStyle:"italic" as any}}>⚠️ Apenas o assessor responsável ou administradores podem alterar o status.</p>}
             </div>
             {d.latitude&&<a href={`https://maps.google.com/?q=${d.latitude},${d.longitude}`} target="_blank" rel="noreferrer" style={{display:"block",marginTop:12,padding:"11px",borderRadius:10,background:"linear-gradient(135deg,#3b82f6,#10b981)",color:"#fff",textAlign:"center",fontSize:13,fontWeight:700,textDecoration:"none"}}>🗺️ Abrir no Google Maps</a>}
           </>}
@@ -612,7 +691,7 @@ function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio}:any){
             {!editOficio?<><IR icon="🔢" label="Protocolo ZELA" valor={d.numero_zela||<span style={{color:"#94a3b8",fontStyle:"italic"}}>Não informado</span>}/><IR icon="📊" label="Status no ZELA" valor={d.status_zela||<span style={{color:"#94a3b8",fontStyle:"italic"}}>Não informado</span>}/></>
             :<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}><Campo label="Protocolo ZELA"><input value={oficio.numero_zela} onChange={e=>setOficio((o:any)=>({...o,numero_zela:e.target.value}))} placeholder="2024/123456" style={{...iBase,width:"100%"}}/></Campo><Campo label="Status no ZELA"><select value={oficio.status_zela} onChange={e=>setOficio((o:any)=>({...o,status_zela:e.target.value}))} style={{...iBase,width:"100%"}}><option value="">Selecione</option>{STATUS_ZELA.map(s=><option key={s} value={s}>{s}</option>)}</select></Campo></div>}
             <div style={{marginTop:16,display:"flex",gap:10}}>
-              {!editOficio?<button onClick={()=>setEditOficio(true)} style={{...btnPri,width:"100%",justifyContent:"center"}}>✏️ Editar Ofício & ZELA</button>:<><button onClick={()=>setEditOficio(false)} style={{...btnCancel,flex:1}}>Cancelar</button><button onClick={salvarOficio} disabled={salvando} style={{...btnPri,flex:1,justifyContent:"center"}}>{salvando?"⏳ Salvando...":"Salvar ✓"}</button></>}
+              {!editOficio?podeEditar?<button onClick={()=>setEditOficio(true)} style={{...btnPri,width:"100%",justifyContent:"center"}}>✏️ Editar Ofício & ZELA</button>:<p style={{fontSize:11,color:"#94a3b8",fontStyle:"italic" as any,textAlign:"center" as any,marginTop:8}}>⚠️ Sem permissão para editar</p>:<><button onClick={()=>setEditOficio(false)} style={{...btnCancel,flex:1}}>Cancelar</button><button onClick={salvarOficio} disabled={salvando} style={{...btnPri,flex:1,justifyContent:"center"}}>{salvando?"⏳ Salvando...":"Salvar ✓"}</button></>}
             </div>
           </>}
         </div>
@@ -623,8 +702,8 @@ function ModalDetalhe({demanda:d,onFechar,onStatus,onSalvarOficio}:any){
 
 /* USUÁRIOS */
 function TelaUsuarios({showToast}:any){
-  const [form,setForm]=useState({nome:"",email:"",senha:""});const [salvando,setSalvando]=useState(false);
-  const criar=async()=>{if(!form.nome||!form.email||!form.senha)return;setSalvando(true);try{await auth.signUp(form.email,form.senha,form.nome);showToast(`Usuário ${form.nome} criado! ✅`);setForm({nome:"",email:"",senha:""});}catch(e:any){showToast("Erro: "+e.message,"erro");}finally{setSalvando(false);}};
+  const [form,setForm]=useState({nome:"",email:"",senha:"",perfil:"assessor"});const [salvando,setSalvando]=useState(false);
+  const criar=async()=>{if(!form.nome||!form.email||!form.senha)return;setSalvando(true);try{await auth.signUp(form.email,form.senha,form.nome,form.perfil||'assessor');showToast(`Usuário ${form.nome} criado! ✅`);setForm({nome:"",email:"",senha:""});}catch(e:any){showToast("Erro: "+e.message,"erro");}finally{setSalvando(false);}};
   return(
     <div>
       <div className="fade" style={{marginBottom:24}}><h1 style={{fontFamily:"Sora",fontWeight:800,fontSize:26,color:"#0f172a"}}>Usuários</h1></div>
@@ -633,6 +712,12 @@ function TelaUsuarios({showToast}:any){
         <Campo label="Nome Completo"><input value={form.nome} onChange={e=>setForm({...form,nome:e.target.value})} style={{...iBase,width:"100%"}} placeholder="Nome do assessor"/></Campo>
         <Campo label="E-mail"><input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={{...iBase,width:"100%"}} placeholder="email@exemplo.com"/></Campo>
         <Campo label="Senha Provisória"><input type="password" value={form.senha} onChange={e=>setForm({...form,senha:e.target.value})} style={{...iBase,width:"100%"}} placeholder="Mínimo 6 caracteres"/></Campo>
+        <Campo label="Perfil de Acesso">
+          <select value={form.perfil} onChange={e=>setForm({...form,perfil:e.target.value})} style={{...iBase,width:"100%"}}>
+            <option value="assessor">👤 Assessor — cadastra e edita suas demandas</option>
+            <option value="admin">🔑 Administrador — acesso total</option>
+          </select>
+        </Campo>
         <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#92400e"}}>⚠️ O usuário precisa confirmar o e-mail antes de entrar.</div>
         <button onClick={criar} disabled={salvando||!form.nome||!form.email||!form.senha} style={{...btnPri,width:"100%",justifyContent:"center",opacity:(!form.nome||!form.email||!form.senha)?.5:1}}>{salvando?"⏳ Criando...":"Criar Usuário ✓"}</button>
       </div>

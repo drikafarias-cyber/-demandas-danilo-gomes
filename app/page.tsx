@@ -415,7 +415,7 @@ function TelaDemandas({demandas,setModal,onUpdate,onDelete,onReload,setDemandaEd
           <option value="">Todos os Grupos</option>
           {GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}
         </select>
-        {filtro.grupo&&subsDisponiveis.length>1&&(
+        {filtro.grupo&&(
           <select value={filtro.subcategoria} onChange={e=>setFiltro({...filtro,subcategoria:e.target.value})} style={iBase}>
             <option value="">Todas Subcategorias</option>
             {subsDisponiveis.map((s:string)=><option key={s} value={s}>{s}</option>)}
@@ -749,7 +749,7 @@ function TelaRelatorios({demandas,showToast}:any){
           <option value="">Todos os Grupos</option>
           {GRUPOS.map(g=><option key={g.id} value={g.id}>{g.icon} {g.label}</option>)}
         </select>
-        {filtro.grupo&&subsDisponiveis.length>1&&(
+        {filtro.grupo&&(
           <select value={filtro.subcategoria} onChange={e=>setFiltro({...filtro,subcategoria:e.target.value})} style={iBase}>
             <option value="">Todas Subcategorias</option>
             {subsDisponiveis.map((s:string)=><option key={s} value={s}>{s}</option>)}
